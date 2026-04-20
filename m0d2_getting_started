@@ -126,7 +126,10 @@ It could be found in configurations files, log files or user history(bash_histor
 
 We may have read access over a .ssh directory and may found - home/user/.ssh/id_rsa or /root/.ssh/id_rsa, and use it to log in to the server.
 
-If we have a read access via the id_rsa ; we may copy it to our machne and use -i to log with it: - vim id_rsa - chmod 600 id_rsa - ssh root@IP -i id_rsa
+If we have a read access via the id_rsa ; we may copy it to our machne and use -i to log with it: 
+    - vim id_rsa (or cat)
+    - chmod 600 id_rsa 
+    - ssh root@IP -i id_rsa
 
 If we have write access in another user /.ssh directory, we can place our public key in the : - /home/user/.ssh/authorized_keys
 
