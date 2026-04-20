@@ -10,6 +10,7 @@ I) Type of shells: - Bash (linux) or Powershell (Windows)
     - Web shell: Communicates through a web server, pass command directly on web and get the response
 
 
+
     a) Reverse shell:
 
 Most common type of shell, quickest and easiest method to obtain control over compromised host.
