@@ -1,0 +1,135 @@
+Penetration Testing Process:
+
+	- Pre-Engagement :
+Define commitments, tasks, scope, limitations and related engagement
+After this, we move to Information Gathering stage.
+
+
+intro to networking, intro to webapp, web request, JavaScript Deobfuscation, 
+intro to Active Directory,
+
+
+	- Informationg Gathering :
+
+Network Enumeration with nmap, Footprinting,
+
+
+	- Vulnerability assessment : (using automated tools like Nessus, Qualys, OpenVAS)
+
+Exploitation : Trying to get into the system
+Post-Exploitation : We try to escalate privilege
+Lateral Movement : We try to attack other system on the network
+Info gathering:  Go back to info gathering to exploit other vulnerabilities
+
+
+-> Vulnerabilities assessment, File Transfers, Shells & payloads, Metasploit framework
+
+
+	- Explotoitation: 
+-> Password attacks/ attacking common services/ pivoting, tunneling and port forwarding
+Active Directory Enumeration and attacks
+
+
+	- Web exploitation
+Using wb proxies/ Attacking web with ffuf/ Login Brute force/ SQL injection fundamentals
+SQLMap essentials/ XSS / File Inclusion/ Command Injections/ Web Attacks/ Attacking Common App
+
+
+	- Post-Exploitation
+
+
+
+
+	I- Penetration Testing Overview
+
+Testing methods : external and internal
+
+	a- External Penetration Test:
+
+Many pentests are used from and external/anonymous perspective
+
+
+	b- Internal Penetration Test:
+
+We perform testing from within the corporate network
+
+	c- Types of Testing environment:
+
+Network		Web App		Mobile 		API 		Thick Client
+IoT		Cloud		Source Code	Physical Security	Employees
+Hosts 		Server 		Security Policies	Firewall	IDS/IPS
+
+
+
+
+
+
+	II- Scoping Questionnaire 
+It should clearly explain our services and may typically ask them to choose one or more from
+the following list:
+
+☐ Internal Vulnerability Assessment	☐ External Vulnerability Assessment
+☐ Internal Penetration Test		☐ External Penetration Test
+☐ Wireless Security Assessment		☐ Application Security Assessment
+☐ Physical Security Assessment		☐ Social Engineering Assessment
+☐ Red Team Assessment			☐ Web Application Security Assessment
+
+
+
+Rules of Engagement - Checklist
+Checkpoint			Contents
+☐ Introduction			Description of this document.
+☐ Contractor			Company name, contractor full name, job title.
+☐ Penetration Testers		Company name, pentesters full name.
+☐ Contact Information		Mailing addresses, e-mail addresses, and phone numbers of all client parties and penetration testers.
+☐ Purpose			Description of the purpose for the conducted penetration test.
+☐ Goals				Description of the goals that should be achieved with the penetration test.
+☐ Scope				All IPs, domain names, URLs, or CIDR ranges.
+☐ Lines of Communication	Online conferences or phone calls or face-to-face meetings, or via e-mail.
+☐ Time Estimation		Start and end dates.
+☐ Time of the Day to Test	Times of the day to test.
+☐ Penetration Testing Type	External/Internal Penetration Test/Vulnerability Assessments/Social Engineering.
+☐ Penetration Testing Locations	Description of how the connection to the client network is established.
+☐ Methodologies			OSSTMM, PTES, OWASP, and others.
+☐ Objectives / Flags		Users, specific files, specific information, and others.
+☐ Evidence Handling		Encryption, secure protocols
+☐ System Backups		Configuration files, databases, and others.
+☐ Information Handling		Strong data encryption
+☐ Incident Handling and Reporting	Cases for contact, pentest interruptions, type of reports
+☐ Status Meetings		Frequency of meetings, dates, times, included parties
+☐ Reporting			Type, target readers, focus
+☐ Retesting			Start and end dates
+☐ Disclaimers and Limitation of Liability	System damage, data loss
+☐ Permission to Test		Signed contract, contractors agreement
+
+
+
+
+
+Vulnerabilities Assessment
+
+Type of vulnerabilities analysis:
+	- Descriptive
+	- Diagnostic
+	- Predictive
+	- Prescriptive
+
+
+
+
+Exploitation :
+Prioritization:
+	- probability of success => CVSS Scoring or NVD Calculator
+	- complexity
+	- probability of damage
+
+
+
+
+
+
+
+
+
+
+

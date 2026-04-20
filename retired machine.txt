@@ -1,0 +1,10 @@
+Practice using metasploit with retired machine:
+Granny/Grandpa
+Jerry
+Blue
+Lame
+Optimum
+Legacy
+Devel
+
+
