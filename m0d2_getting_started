@@ -101,7 +101,9 @@ Goal is to be root (linux) or administrator/SYSTEM (windows)
 
 Both: PEASS: https://github.com/peass-ng/PEASS-ng
 
-Furthermore we could look for: - outdated kernel/OS - Vulnerable software (dpkg -l in linux)/ (C:\Program Files in windows) - User Privileges (Sudo in linux) / (SUID in windows) / Windows Token Privileges
+Furthermore we could look for: 
+    - outdated kernel/OS - Vulnerable software (dpkg -l in linux)/ (C:\Program Files in windows) 
+    - User Privileges (Sudo in linux) / (SUID in windows) / Windows Token Privileges
 
 view our priviledges: sudo -l
 Switch to root: sudo su -
