@@ -7,4 +7,44 @@ Optimum
 Legacy
 Devel
 
+Resources
+	Vulnerable machine
 
+	- OWASP Juice shop => modern vulnerable web app written in node.js to showcase owasp top ten 
+	- Metasploitable 2 => purposefully vulnearble ubuntu lunix vm that we can practice
+	- Metasploitable 3 => template for building vulnerable windows vm configured with wide range of vulnerabilities
+	- DVMA => Vulnerable PHP/MySQL application with varying degree od difficulty
+
+
+
+	YouTube Channels
+	- IppSec => indepth walkthrough of retired HTB box
+	- VbScrub => HTB videos on technique, focus on Active Directory exploitation
+	- STOK => Provides videos on infosec related topic. especially bug bounties and web app pentest
+	- LiveOverflow => Wide variety of technical infosec topics
+
+
+
+	Blog for writeup:
+	- 0xdf hacks stuff : https://0xdf.gitlab.io/
+
+
+	Tutorial Websites
+	- Under the wire: https://underthewire.tech/wargames
+	- Over the wire:  https://overthewire.org/wargames/
+==> Train user on powershell and linux cli
+
+
+HTB friendly beginner machines;
+	- lame
+	- blue
+	- nibbles
+	- shocker
+	-jerry
+
+HTB friendly challenges
+	- find the easy pass
+	- weak rsa
+	- you know 0xDiablos
+
+Dante Prolab
