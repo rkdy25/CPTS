@@ -1,0 +1,12 @@
+CCTV :
+Lesson learned
+	- hashcat password cracking
+	- essential use of sqlmap for injection
+	- ssh -L <port>:127.0.0.1:<port> -l name@<domain
+Allow you to access internal service running on a specific port to 
+be accessbile by browser
+	- all password of a service may be found in .conf 
+	- always list internal services on privilege escalation
+
+sudo ss -tulpn
+systemctl list-units --type=service --state=running.
