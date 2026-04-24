@@ -1,0 +1,12 @@
+- Inital exploit
+  - vhost
+  - read carefully the cve 
+  - look for cve even without knowing the version; 
+
+- Lateral mouvement => www-data -> steve
+  - look for process running as the use we want to trigger
+  - look for cron and bak file in /opt or /tmp
+  - look for outdated use of libraries in python code
+
+
+- Look for custom app running
