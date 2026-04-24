@@ -52,3 +52,6 @@ print("done")
 EOF
 ```
 
+
+https://github.com/ahmedreda38/CVE-2025-47273-PoC
+
